@@ -2,7 +2,7 @@
 
 (def players (cycle ["X" "O"]))
 
-(defn empty-board [] (vec (repeat 9 \space)))
+(def empty-board (vec (repeat 9 \space)))
 
 (defn board->ascii
   "Produces an ascii board representation for printing"
@@ -30,27 +30,14 @@
     (#(map-indexed (fn [i el] (nth el i)) %) (partition length board))
     (#(map-indexed (fn [i el] (nth el (- (count %) i 1))) %) (partition length board))))
 
-(defn winner?
-  "Do we have a winner?"
+(def win-squares
+  (let [idx (partition 3 (range 9))]
+    (concat idx (apply map list idx) [[0 4 8] [2 4 6]])))
+
+(defn win?
+  "Do we have a winner? Who is it? Returns \X, \O, or \space/nil (no winner)"
   [board]
-  (or
-    ; ROWS
-    (let [row (partition 3 board)]
-      (or
-        (and (apply = (first row)) (every? #(not= % \space) (first row)))
-        (and (apply = (second row)) (every? #(not= % \space) (second row)))
-        (and (apply = (last row)) (every? #(not= % \space) (last row)))))
-    ; COLUMNS
-    (let [column (apply map list (partition 3 board))]
-      (or
-        (and (apply = (first column)) (every? #(not= % \space) (first column)))
-        (and (apply = (second column)) (every? #(not= % \space) (second column)))
-        (and (apply = (last column)) (every? #(not= % \space) (last column)))))
-    ; DIAGONALS
-    (let [diagonal (diagonal board 3)]
-      (or
-        (and (apply = (first diagonal)) (every? #(not= % \space) (first diagonal)))
-        (and (apply = (second diagonal)) (every? #(not= % \space) (second diagonal)))))))
+  (some (fn [[a b c]] (if (= (board a) (board b) (board c)) (board a))) win-squares))
 
 (defn full? [board] (not (some #{\space} board)))
 
@@ -84,7 +71,7 @@
       (board->ascii (range 1 10))
       "\n")))
 
-(def state (atom (empty-board)))
+(def state (atom empty-board))
 
 (defn play
   "
@@ -102,7 +89,7 @@
     (newline)
     (display @state)
     (newline)
-    (if (winner? @state)
+    (if (win? @state)
       (do
         (println "You've won!")
         (System/exit 0))
