@@ -35,7 +35,7 @@
     (concat idx (apply map list idx) [[0 4 8] [2 4 6]])))
 
 (defn win?
-  "Do we have a winner? Who is it? Returns \X, \O, or \space/nil (no winner)"
+  "Do we have a winner? Who is it? Returns X, O or space/nil (no winner)"
   [board]
   (some (fn [[a b c]] (if (= (board a) (board b) (board c)) (board a))) win-squares))
 
