@@ -3,6 +3,15 @@
 
 (def players (cycle [\X \O]))
 
+(defn next-player
+  "Analyses the board and returns the next player's mark"
+  [board]
+  (if (or
+        (= ((frequencies board) \space) 9)
+        (= ((frequencies board) \X) ((frequencies board) \O)))
+    \X
+    \O))
+
 (def empty-board (vec (repeat 9 \space)))
 
 (defn board->ascii
@@ -52,9 +61,8 @@
 (defn moves
   "Given a board, return all possible moves"
   [board]
-  (map-indexed #(turn board (nth players %1) %2) (empty-squares board)))
+  (map #(turn board (next-player board) %) (empty-squares board)))
 
-; TODO make it intelligent
 (defn evaluate-position
   "Scores the given board position"
   [board]
@@ -117,8 +125,24 @@
   ([computer]
     (start-text)
     (println (str "Computer (" computer ") vs Human"))
-    (do
-      (System/exit 0)))
+    (loop [nextplyr (next-player @state)]
+      (if (= (str nextplyr) computer)
+        (reset! state (choose-best-move @state))
+        (reset! state (turn @state nextplyr (prompt-user @state nextplyr))))
+      (newline)
+      (display @state)
+      (newline)
+      (if (win? @state)
+        (do
+          (if (= (str nextplyr) computer)
+            (println "Computer won!")
+            (println "You've won!")) ; Yeah, right!
+          (System/exit 0))
+        (if (full? @state)
+          (do
+            (println "It's a draw!")
+            (System/exit 0))))
+      (recur (next-player @state))))
   ([computer1 computer2]
     (start-text)
     (println "Computer vs Computer")

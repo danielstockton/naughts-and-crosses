@@ -10,6 +10,8 @@ Naughts and Crosses in Clojure
 
 ### Human vs Computer
 
+Computer plays well as X and terribly as O:
+
     $ lein run X
     $ lein run O
 
