@@ -1,6 +1,7 @@
-(ns naughts-and-crosses.core)
+(ns naughts-and-crosses.core
+  (:require [naughts-and-crosses.ai :as ai]))
 
-(def players (cycle ["X" "O"]))
+(def players (cycle [\X \O]))
 
 (def empty-board (vec (repeat 9 \space)))
 
@@ -37,7 +38,7 @@
 (defn win?
   "Do we have a winner? Who is it? Returns X, O or nil"
   [board]
-  (some (fn [[a b c]] (if (= (board a) (board b) (board c)) (if (= (board a) \space) nil (board a)))) win-squares))
+  (some (fn [[a b c]] (if (= (board a) (board b) (board c)) (if (not= (board a) \space) (board a)))) win-squares))
 
 (defn full? [board] (not (some #{\space} board)))
 
@@ -48,9 +49,24 @@
   [board]
   (take-nth 2 (flatten (filter #(= \space (second %)) (map-indexed vector board)))))
 
-(defn turn-tree
-  "Generate all possible moves"
-  [board])
+(defn moves
+  "Given a board, return all possible moves"
+  [board]
+  (map-indexed #(turn board (nth players %1) %2) (empty-squares board)))
+
+; TODO make it intelligent
+(defn evaluate-position
+  "Scores the given board position"
+  [board]
+  (case (win? board)
+    \X 1
+    \O -1
+    0))
+
+(defn choose-best-move
+  "Find the best computer move for the given board position"
+  [board]
+  (ai/best-move (ai/game-tree board moves) evaluate-position))
 
 (defn read-int []
   (try (Integer/parseInt (read-line))
@@ -106,6 +122,17 @@
   ([computer1 computer2]
     (start-text)
     (println "Computer vs Computer")
-    (do
-      (Thread/sleep 3000)
-      (System/exit 0))))
+   (loop [in-line players]
+    (reset! state (choose-best-move @state))
+    (newline)
+    (display @state)
+    (newline)
+    (if (win? @state)
+      (do
+        (println "You've won!")
+        (System/exit 0))
+      (if (full? @state)
+        (do
+          (println "It's a draw!")
+          (System/exit 0))))
+    (recur (next in-line)))))
